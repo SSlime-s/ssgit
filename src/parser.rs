@@ -18,6 +18,7 @@ pub enum Commands {
     UpdateRef(UpdateRefArgs),
     Init(InitArgs),
     Add(AddArgs),
+    Commit(CommitArgs),
 }
 
 #[derive(Args, Debug)]
@@ -111,6 +112,12 @@ pub enum ObjectType {
 #[derive(Args, Debug)]
 pub struct AddArgs {
     pub files: Vec<String>,
+}
+
+#[derive(Args, Debug)]
+pub struct CommitArgs {
+    #[arg(short)]
+    pub message: String,
 }
 
 pub fn parse() -> Cli {

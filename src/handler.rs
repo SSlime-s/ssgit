@@ -3,6 +3,7 @@ use anyhow::{bail, Result};
 
 mod add;
 mod cat_file;
+mod commit;
 mod commit_tree;
 mod hash_object;
 mod init;
@@ -26,5 +27,6 @@ pub fn handle(cli: &Cli) -> Result<()> {
         Commands::UpdateRef(args) => update_ref::handle(args),
         Commands::Init(args) => init::handle(args),
         Commands::Add(args) => add::handle(args),
+        Commands::Commit(args) => commit::handle(args),
     }
 }
