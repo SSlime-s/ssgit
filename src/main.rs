@@ -1,9 +1,11 @@
+mod handler;
 mod parser;
+mod object;
 
-fn main() {
+use anyhow::Result;
+
+fn main() -> Result<()> {
     let cli = parser::parse();
 
-    dbg!(cli);
-
-    println!("Hello, world!");
+    handler::handle(&cli)
 }
