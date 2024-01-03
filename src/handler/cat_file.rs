@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use crate::object::zip::decompress;
+use crate::object::ObjectType;
 use crate::object::{hash::Hash, GitObject};
 use crate::parser::CatFileArgs;
 use anyhow::{bail, Result};
@@ -29,9 +30,19 @@ pub fn handle(args: &CatFileArgs) -> Result<()> {
     let objects = GitObject::try_from(decompressed_content.as_slice())?;
 
     match (args.options.pretty, args.options.type_, args.options.size) {
-        (true, _, _) => {
-            println!("{}", std::str::from_utf8(&objects.content)?);
-        }
+        (true, _, _) => match objects.type_ {
+            ObjectType::Blob => {
+                println!("{}", objects.parse_blob_body()?);
+            }
+            ObjectType::Tree => {
+                for entry in objects.parse_tree_body()? {
+                    println!("{}", entry);
+                }
+            }
+            ObjectType::Commit => {
+                unimplemented!();
+            }
+        },
         (_, true, _) => {
             println!("{}", objects.type_.to_string());
         }
@@ -40,6 +51,8 @@ pub fn handle(args: &CatFileArgs) -> Result<()> {
         }
         _ => unreachable!(),
     }
+
+    dbg!(objects.hash());
 
     Ok(())
 }
