@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{path::PathBuf, str::FromStr};
 
 use anyhow::{bail, Result};
 use sha1::{Digest, Sha1};
@@ -88,6 +88,12 @@ impl Hash {
         let hash: [u8; 20] = Sha1::digest(content).into();
 
         Self::from(hash)
+    }
+
+    pub fn get_object_path(&self) -> PathBuf {
+        std::path::Path::new(".git/objects")
+            .join(self.directory())
+            .join(self.file())
     }
 }
 impl std::fmt::Display for Hash {
