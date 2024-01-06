@@ -1,7 +1,9 @@
 use std::str::FromStr;
 
-use anyhow::bail;
+use crate::parser::ObjectType as ParserObjectType;
 use anyhow::{bail, Result};
+
+use self::zip::{decompress, compress};
 
 pub mod hash;
 pub mod zip;
@@ -47,6 +49,15 @@ pub enum ObjectType {
     Blob,
     Tree,
     Commit,
+}
+impl From<ParserObjectType> for ObjectType {
+    fn from(parser_object_type: ParserObjectType) -> Self {
+        match parser_object_type {
+            ParserObjectType::Blob => Self::Blob,
+            ParserObjectType::Tree => Self::Tree,
+            ParserObjectType::Commit => Self::Commit,
+        }
+    }
 }
 impl FromStr for ObjectType {
     type Err = anyhow::Error;
@@ -145,6 +156,18 @@ impl GitObject {
         }
 
         Ok(entries)
+    }
+
+    pub fn from_raw(bytes: &[u8]) -> Result<Self> {
+        let decompressed_bytes = decompress(bytes)?;
+
+        Self::try_from(decompressed_bytes.as_slice())
+    }
+
+    pub fn to_raw(&self) -> Result<Vec<u8>> {
+        let bytes: Vec<u8> = self.into();
+
+        compress(&bytes)
     }
 }
 impl TryFrom<&[u8]> for GitObject {
