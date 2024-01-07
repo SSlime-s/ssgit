@@ -20,8 +20,7 @@ pub fn handle(args: &CatFileArgs) -> Result<()> {
         }
     }
 
-    let content = std::fs::read(path)?;
-    let objects = GitObject::from_raw(&content)?;
+    let objects = GitObject::read(&hash)?;
 
     match (args.options.pretty, args.options.type_, args.options.size) {
         (true, _, _) => match objects.type_ {
@@ -34,7 +33,7 @@ pub fn handle(args: &CatFileArgs) -> Result<()> {
                 }
             }
             ObjectType::Commit => {
-                unimplemented!();
+                println!("{}", objects.parse_commit_body()?);
             }
         },
         (_, true, _) => {

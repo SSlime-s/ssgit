@@ -1,46 +1,33 @@
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 use crate::parser::ObjectType as ParserObjectType;
 use anyhow::{bail, Result};
+use chrono::{FixedOffset, TimeZone};
 
-use self::zip::{decompress, compress};
+use self::{
+    mode::Mode,
+    zip::{compress, decompress},
+};
 
 pub mod hash;
+pub mod mode;
 pub mod zip;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct TreeEntry {
-    pub file_type: TreeEntryType,
+    pub file_type: Mode,
     pub name: String,
     pub hash: hash::Hash,
 }
 impl std::fmt::Display for TreeEntry {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}\t{}", self.file_type, self.hash, self.name)
-    }
-}
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub enum TreeEntryType {
-    Blob,
-    Tree,
-}
-impl TryFrom<&str> for TreeEntryType {
-    type Error = anyhow::Error;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            "40000" => Ok(Self::Tree),
-            "100644" => Ok(Self::Blob),
-            _ => bail!("Invalid tree entry type {}", value),
-        }
-    }
-}
-impl std::fmt::Display for TreeEntryType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TreeEntryType::Blob => write!(f, "100644 blob"),
-            TreeEntryType::Tree => write!(f, "040000 tree"),
-        }
+        write!(
+            f,
+            "{} {}\t{}",
+            self.file_type.to_format_with_name(),
+            self.hash,
+            self.name
+        )
     }
 }
 
@@ -102,6 +89,24 @@ impl GitObject {
         hash::Hash::hash_bytes(&full_content)
     }
 
+    pub fn read(hash: &hash::Hash) -> Result<Self> {
+        let path = hash.get_object_path();
+
+        let content = std::fs::read(path)?;
+
+        Self::from_raw(&content)
+    }
+
+    pub fn write(&self) -> Result<()> {
+        let hash = self.hash();
+        let path = hash.get_object_path();
+
+        std::fs::create_dir_all(path.parent().unwrap())?;
+        std::fs::write(path, self.to_raw()?)?;
+
+        Ok(())
+    }
+
     pub fn parse_blob_body(&self) -> Result<String> {
         if self.type_ != ObjectType::Blob {
             bail!("Object is not a blob");
@@ -124,7 +129,7 @@ impl GitObject {
 
             let mode = parts.next().ok_or(anyhow::anyhow!("Could not find mode"))?;
             let mode = std::str::from_utf8(mode)?;
-            let mode = TreeEntryType::try_from(mode)?;
+            let mode = Mode::from_str(mode)?;
 
             body = parts
                 .next()
@@ -156,6 +161,30 @@ impl GitObject {
         }
 
         Ok(entries)
+    }
+
+    pub fn parse_commit_body(&self) -> Result<Commit> {
+        if self.type_ != ObjectType::Commit {
+            panic!("Object is not a commit");
+        }
+
+        let commit = Commit::from_str(std::str::from_utf8(&self.body)?)?;
+
+        Ok(commit)
+    }
+
+    pub fn new_tree(entries: &[TreeEntry]) -> Self {
+        let mut bytes = Vec::new();
+
+        for entry in entries {
+            bytes.extend_from_slice(entry.file_type.to_string().as_bytes());
+            bytes.push(b' ');
+            bytes.extend_from_slice(entry.name.as_bytes());
+            bytes.push(b'\0');
+            bytes.extend_from_slice(&entry.hash.to_raw());
+        }
+
+        Self::new(ObjectType::Tree, bytes)
     }
 
     pub fn from_raw(bytes: &[u8]) -> Result<Self> {
@@ -211,5 +240,159 @@ impl From<&GitObject> for Vec<u8> {
 impl From<GitObject> for Vec<u8> {
     fn from(object: GitObject) -> Self {
         Self::from(&object)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct Commit {
+    pub tree: hash::Hash,
+    pub parent: Option<hash::Hash>,
+    pub author: User,
+    pub committer: User,
+    pub rest_of_header: String,
+    pub message: String,
+}
+impl FromStr for Commit {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut parts = s.splitn(2, "\n\n");
+
+        let header = parts
+            .next()
+            .ok_or(anyhow::anyhow!("Could not find header"))?;
+        let message = parts
+            .next()
+            .ok_or(anyhow::anyhow!("Could not find message"))?;
+
+        let header_lines = header.lines().collect::<Vec<&str>>();
+        let mut header_lines = header_lines.iter().peekable();
+
+        let tree_line = header_lines
+            .next()
+            .ok_or(anyhow::anyhow!("Could not find tree line"))?;
+        let tree = hash::Hash::from_str(
+            tree_line
+                .strip_prefix("tree ")
+                .ok_or(anyhow::anyhow!("Could not find tree"))?,
+        )?;
+
+        let parent = if header_lines
+            .peek()
+            .ok_or(anyhow::anyhow!("Could not find parent line"))?
+            .starts_with("parent ")
+        {
+            let parent_line = header_lines
+                .next()
+                .ok_or(anyhow::anyhow!("Could not find parent line"))?;
+            let parent = hash::Hash::from_str(
+                parent_line
+                    .strip_prefix("parent ")
+                    .ok_or(anyhow::anyhow!("Could not find parent"))?,
+            )?;
+            Some(parent)
+        } else {
+            None
+        };
+
+        let author_line = header_lines
+            .next()
+            .ok_or(anyhow::anyhow!("Could not find author line"))?;
+        let author = User::from_str(
+            author_line
+                .strip_prefix("author ")
+                .ok_or(anyhow::anyhow!("Could not find author"))?,
+        )?;
+
+        let committer_line = header_lines
+            .next()
+            .ok_or(anyhow::anyhow!("Could not find committer line"))?;
+        let committer = User::from_str(
+            committer_line
+                .strip_prefix("committer ")
+                .ok_or(anyhow::anyhow!("Could not find committer"))?,
+        )?;
+
+        let rest_of_header = header_lines.copied().collect::<Vec<&str>>().join("\n");
+
+        Ok(Self {
+            tree,
+            parent,
+            author,
+            committer,
+            rest_of_header,
+            message: message.to_string(),
+        })
+    }
+}
+impl Display for Commit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let parent = if let Some(parent) = &self.parent {
+            format!("parent {}\n", parent)
+        } else {
+            "".to_string()
+        };
+
+        write!(
+            f,
+            "tree {}\n{}author {}\ncommitter {}\n{}\n\n{}",
+            self.tree, parent, self.author, self.committer, self.rest_of_header, self.message
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct User {
+    pub name: String,
+    pub email: String,
+    pub time: chrono::DateTime<FixedOffset>,
+}
+impl User {
+    pub fn new(name: String, email: String, time: chrono::DateTime<FixedOffset>) -> Self {
+        Self { name, email, time }
+    }
+}
+impl FromStr for User {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut parts = s.splitn(4, ' ');
+
+        let name = parts
+            .next()
+            .ok_or(anyhow::anyhow!("Could not find name"))?
+            .to_string();
+        let email = parts
+            .next()
+            .and_then(|s| s.strip_prefix('<'))
+            .and_then(|s| s.strip_suffix('>'))
+            .ok_or(anyhow::anyhow!("Could not find email"))?
+            .to_string();
+        let timestamp = parts
+            .next()
+            .ok_or(anyhow::anyhow!("Could not find timestamp"))?;
+        let offset = parts
+            .next()
+            .ok_or(anyhow::anyhow!("Could not find offset"))?;
+
+        let offset = FixedOffset::from_str(format!("{}:{}", &offset[..3], &offset[3..]).as_str())?;
+        let time = offset
+            .timestamp_micros(i64::from_str(timestamp)?)
+            .single()
+            .ok_or(anyhow::anyhow!("Could not parse timestamp"))?;
+
+        Ok(Self::new(name, email, time))
+    }
+}
+impl Display for User {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} <{}> {} {}",
+            self.name,
+            self.email,
+            self.time.timestamp_micros(),
+            format!("{}", self.time.offset()).replace(":", "")
+        )
     }
 }
