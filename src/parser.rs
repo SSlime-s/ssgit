@@ -11,6 +11,9 @@ pub struct Cli {
 pub enum Commands {
     CatFile(CatFileArgs),
     HashObject(HashObjectArgs),
+    UpdateIndex(UpdateIndexArgs),
+    WriteTree(WriteTreeArgs),
+    LsFiles(LsFilesArgs),
 }
 
 #[derive(Args, Debug)]
@@ -44,6 +47,33 @@ pub struct HashObjectArgs {
     #[arg(short, value_enum, default_value_t=ObjectType::Blob)]
     pub type_: ObjectType,
 }
+
+#[derive(Args, Debug)]
+pub struct UpdateIndexArgs {
+    pub file: Vec<String>,
+
+    #[arg(long)]
+    pub add: bool,
+
+    #[arg(long)]
+    pub remove: bool,
+
+    #[arg(long, num_args(3),value_names(&["mode", "object", "file"]))]
+    pub cacheinfo: Option<Vec<String>>,
+}
+
+#[derive(Args, Debug)]
+pub struct WriteTreeArgs {}
+
+#[derive(Args, Debug)]
+pub struct LsFilesArgs {
+    #[arg(short, long, default_value_t=true)]
+    pub cached: bool,
+
+    #[arg(short, long)]
+    pub stage: bool,
+}
+
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
 pub enum ObjectType {

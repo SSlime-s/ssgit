@@ -3,6 +3,8 @@ use std::{path::PathBuf, str::FromStr};
 use anyhow::{bail, Result};
 use sha1::{Digest, Sha1};
 
+use crate::consts::OBJECTS_DIRECTORY;
+
 pub fn bytes_to_hex(bytes: &[u8]) -> String {
     bytes
         .iter()
@@ -66,6 +68,19 @@ impl From<[u8; 20]> for Hash {
         }
     }
 }
+impl TryFrom<&[u8]> for Hash {
+    type Error = anyhow::Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self> {
+        if bytes.len() != 20 {
+            bail!("Hash must be 20 bytes long");
+        }
+
+        Ok(Self {
+            value: bytes_to_hex(bytes),
+        })
+    }
+}
 impl Hash {
     pub fn new(value: &str) -> Result<Self> {
         Self::from_str(value)
@@ -77,6 +92,14 @@ impl Hash {
 
     pub fn file(&self) -> &str {
         &self.value[2..]
+    }
+
+    pub fn from_raw(bytes: &[u8]) -> Result<Self> {
+        Self::try_from(bytes)
+    }
+
+    pub fn to_raw(&self) -> Vec<u8> {
+        hex_to_bytes(&self.value).unwrap()
     }
 
     #[allow(clippy::self_named_constructors)]
@@ -91,7 +114,7 @@ impl Hash {
     }
 
     pub fn get_object_path(&self) -> PathBuf {
-        std::path::Path::new(".git/objects")
+        std::path::Path::new(OBJECTS_DIRECTORY)
             .join(self.directory())
             .join(self.file())
     }

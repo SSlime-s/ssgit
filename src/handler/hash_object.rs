@@ -25,8 +25,7 @@ pub fn handle(args: &HashObjectArgs) -> Result<()> {
     }
 
     if args.write {
-        std::fs::create_dir_all(path.parent().unwrap())?;
-        std::fs::write(path, object_bytes)?;
+        object.write()?;
     }
 
     println!("{}", hash);
