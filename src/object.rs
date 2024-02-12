@@ -19,6 +19,14 @@ pub struct TreeEntry {
     pub name: String,
     pub hash: hash::Hash,
 }
+impl TreeEntry {
+    fn sort_key(&self) -> String {
+        match self.file_type {
+            Mode::Tree => format!("{}/", self.name),
+            Mode::Blob(_) => self.name.clone(),
+        }
+    }
+}
 impl std::fmt::Display for TreeEntry {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -28,6 +36,16 @@ impl std::fmt::Display for TreeEntry {
             self.hash,
             self.name
         )
+    }
+}
+impl PartialOrd for TreeEntry {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for TreeEntry {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.sort_key().cmp(&other.sort_key())
     }
 }
 
@@ -174,6 +192,8 @@ impl GitObject {
     }
 
     pub fn new_tree(entries: &[TreeEntry]) -> Self {
+        let mut entries = entries.to_vec();
+        entries.sort();
         let mut bytes = Vec::new();
 
         for entry in entries {
@@ -392,7 +412,7 @@ impl Display for User {
             self.name,
             self.email,
             self.time.timestamp_micros(),
-            format!("{}", self.time.offset()).replace(":", "")
+            format!("{}", self.time.offset()).replace(':', "")
         )
     }
 }

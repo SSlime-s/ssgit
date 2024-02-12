@@ -3,6 +3,7 @@ mod parser;
 mod object;
 mod consts;
 mod index;
+mod tree;
 
 use anyhow::Result;
 
