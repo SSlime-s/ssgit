@@ -267,7 +267,7 @@ impl From<GitObject> for Vec<u8> {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Commit {
     pub tree: hash::Hash,
-    pub parent: Option<hash::Hash>,
+    pub parent: Vec<hash::Hash>,
     pub author: User,
     pub committer: User,
     pub rest_of_header: String,
@@ -298,22 +298,26 @@ impl FromStr for Commit {
                 .ok_or(anyhow::anyhow!("Could not find tree"))?,
         )?;
 
-        let parent = if header_lines
-            .peek()
-            .ok_or(anyhow::anyhow!("Could not find parent line"))?
-            .starts_with("parent ")
-        {
-            let parent_line = header_lines
-                .next()
-                .ok_or(anyhow::anyhow!("Could not find parent line"))?;
-            let parent = hash::Hash::from_str(
-                parent_line
-                    .strip_prefix("parent ")
-                    .ok_or(anyhow::anyhow!("Could not find parent"))?,
-            )?;
-            Some(parent)
-        } else {
-            None
+        let parent = {
+            let mut parent = Vec::new();
+
+            while header_lines
+                .peek()
+                .ok_or(anyhow::anyhow!("Could not find parent line"))?
+                .starts_with("parent ")
+            {
+                let parent_line = header_lines
+                    .next()
+                    .ok_or(anyhow::anyhow!("Could not find parent line"))?;
+                let parent_hash = hash::Hash::from_str(
+                    parent_line
+                        .strip_prefix("parent ")
+                        .ok_or(anyhow::anyhow!("Could not find parent"))?,
+                )?;
+                parent.push(parent_hash);
+            }
+
+            parent
         };
 
         let author_line = header_lines
@@ -348,11 +352,16 @@ impl FromStr for Commit {
 }
 impl Display for Commit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let parent = if let Some(parent) = &self.parent {
-            format!("parent {}\n", parent)
-        } else {
-            "".to_string()
-        };
+        let parent = self.parent.iter().fold(String::new(), |mut acc, parent| {
+            let _ = writeln!(acc, "parent {}", parent);
+            acc
+        });
+        let _ = self
+            .parent
+            .iter()
+            .map(|parent| format!("parent {}\n", parent))
+            .collect::<Vec<String>>()
+            .join("");
 
         write!(
             f,
