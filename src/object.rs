@@ -120,7 +120,8 @@ impl GitObject {
         let path = hash.get_object_path();
 
         std::fs::create_dir_all(path.parent().unwrap())?;
-        std::fs::write(path, self.to_raw()?)?;
+        std::fs::write(&path, self.to_raw()?)?;
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o444))?;
 
         Ok(())
     }
