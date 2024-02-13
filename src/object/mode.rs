@@ -1,4 +1,4 @@
-use std::{str::FromStr, fs::Metadata, os::unix::fs::PermissionsExt};
+use std::{fs::Metadata, os::unix::fs::PermissionsExt, str::FromStr};
 
 use anyhow::{bail, Result};
 

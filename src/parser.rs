@@ -14,6 +14,7 @@ pub enum Commands {
     UpdateIndex(UpdateIndexArgs),
     WriteTree(WriteTreeArgs),
     LsFiles(LsFilesArgs),
+    CommitTree(CommitTreeArgs),
 }
 
 #[derive(Args, Debug)]
@@ -67,13 +68,23 @@ pub struct WriteTreeArgs {}
 
 #[derive(Args, Debug)]
 pub struct LsFilesArgs {
-    #[arg(short, long, default_value_t=true)]
+    #[arg(short, long, default_value_t = true)]
     pub cached: bool,
 
     #[arg(short, long)]
     pub stage: bool,
 }
 
+#[derive(Args, Debug)]
+pub struct CommitTreeArgs {
+    pub tree: String,
+
+    #[arg(short)]
+    pub parent: Vec<String>,
+
+    #[arg(short)]
+    pub message: Vec<String>,
+}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
 pub enum ObjectType {

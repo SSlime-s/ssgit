@@ -1,4 +1,8 @@
-use std::{fmt::Display, str::FromStr};
+use std::{
+    fmt::{Display, Write},
+    os::unix::fs::PermissionsExt,
+    str::FromStr,
+};
 
 use crate::parser::ObjectType as ParserObjectType;
 use anyhow::{bail, Result};
@@ -192,6 +196,12 @@ impl GitObject {
         Ok(commit)
     }
 
+    pub fn from_commit(commit: &Commit) -> Self {
+        let body = commit.to_string().as_bytes().to_vec();
+
+        Self::new(ObjectType::Commit, body)
+    }
+
     pub fn new_tree(entries: &[TreeEntry]) -> Self {
         let mut entries = entries.to_vec();
         entries.sort();
@@ -380,6 +390,25 @@ pub struct User {
 impl User {
     pub fn new(name: String, email: String, time: chrono::DateTime<FixedOffset>) -> Self {
         Self { name, email, time }
+    }
+
+    pub fn read_from_git(time: chrono::DateTime<FixedOffset>) -> Result<Self> {
+        let username_child = std::process::Command::new("git")
+            .args(["config", "--get", "user.name"])
+            .stdout(std::process::Stdio::piped())
+            .spawn()?;
+        let email_child = std::process::Command::new("git")
+            .args(["config", "--get", "user.email"])
+            .stdout(std::process::Stdio::piped())
+            .spawn()?;
+
+        let username_raw = username_child.wait_with_output()?.stdout;
+        let email_raw = email_child.wait_with_output()?.stdout;
+
+        let username = String::from_utf8_lossy(&username_raw).trim().to_string();
+        let email = String::from_utf8_lossy(&email_raw).trim().to_string();
+
+        Ok(Self::new(username, email, time))
     }
 }
 impl FromStr for User {
