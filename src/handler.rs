@@ -4,6 +4,7 @@ use anyhow::{bail, Result};
 mod cat_file;
 mod commit_tree;
 mod hash_object;
+mod init;
 mod ls_files;
 mod update_index;
 mod write_tree;
@@ -20,5 +21,6 @@ pub fn handle(cli: &Cli) -> Result<()> {
         Commands::WriteTree(args) => write_tree::handle(args),
         Commands::LsFiles(args) => ls_files::handle(args),
         Commands::CommitTree(args) => commit_tree::handle(args),
+        Commands::Init(args) => init::handle(args),
     }
 }

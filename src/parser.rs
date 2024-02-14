@@ -15,6 +15,7 @@ pub enum Commands {
     WriteTree(WriteTreeArgs),
     LsFiles(LsFilesArgs),
     CommitTree(CommitTreeArgs),
+    Init(InitArgs),
 }
 
 #[derive(Args, Debug)]
@@ -84,6 +85,12 @@ pub struct CommitTreeArgs {
 
     #[arg(short)]
     pub message: Vec<String>,
+}
+
+#[derive(Args, Debug)]
+pub struct InitArgs {
+    #[arg(short = 'b', long)]
+    pub initial_branch: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
