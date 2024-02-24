@@ -3,7 +3,7 @@ use std::str::FromStr;
 use anyhow::Result;
 
 use crate::{
-    object::{hash::Hash, GitObject, User},
+    entity::object::{hash::Hash, GitObject, User},
     parser::CommitTreeArgs,
 };
 
@@ -24,7 +24,7 @@ pub fn handle(args: &CommitTreeArgs) -> Result<()> {
 
     let tree_hash = Hash::from_str(&args.tree)?;
 
-    let commit = crate::object::Commit {
+    let commit = crate::entity::object::Commit {
         tree: tree_hash,
         parent: args
             .parent

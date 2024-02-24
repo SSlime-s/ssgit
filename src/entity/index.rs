@@ -2,7 +2,7 @@ use std::{collections::HashMap, os::unix::fs::MetadataExt, path::Path};
 
 use crate::{
     consts::GIT_INDEX_PATH,
-    object::{hash::Hash, mode::Mode},
+    entity::object::{hash::Hash, mode::Mode},
 };
 use anyhow::Result;
 use byteorder::{BigEndian, ByteOrder};

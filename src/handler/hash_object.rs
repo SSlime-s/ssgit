@@ -1,4 +1,4 @@
-use crate::object::GitObject;
+use crate::entity::object::GitObject;
 use crate::parser::{HashObjectArgs, ObjectType};
 use anyhow::Result;
 

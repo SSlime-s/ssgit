@@ -1,4 +1,4 @@
-use crate::{index::Index, parser::LsFilesArgs};
+use crate::{entity::index::Index, parser::LsFilesArgs};
 use anyhow::Result;
 
 pub fn handle(args: &LsFilesArgs) -> Result<()> {

@@ -15,6 +15,7 @@ pub enum Commands {
     WriteTree(WriteTreeArgs),
     LsFiles(LsFilesArgs),
     CommitTree(CommitTreeArgs),
+    UpdateRef(UpdateRefArgs),
     Init(InitArgs),
 }
 
@@ -85,6 +86,12 @@ pub struct CommitTreeArgs {
 
     #[arg(short)]
     pub message: Vec<String>,
+}
+
+#[derive(Args, Debug)]
+pub struct UpdateRefArgs {
+    pub ref_: String,
+    pub newvalue: String,
 }
 
 #[derive(Args, Debug)]

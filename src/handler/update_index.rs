@@ -1,8 +1,10 @@
 use std::{path::Path, str::FromStr};
 
 use crate::{
-    index::{Index, IndexEntry},
-    object::{hash::Hash, mode::Mode, GitObject},
+    entity::{
+        index::{Index, IndexEntry},
+        object::{hash::Hash, mode::Mode, GitObject},
+    },
     parser::UpdateIndexArgs,
 };
 use anyhow::{bail, Result};
@@ -59,7 +61,7 @@ pub fn handle(args: &UpdateIndexArgs) -> Result<()> {
         let mode = Mode::from_file_metadata(&metadata)?;
 
         let content = std::fs::read(file_name)?;
-        let hash = GitObject::new(crate::object::ObjectType::Blob, content).hash();
+        let hash = GitObject::new(crate::entity::object::ObjectType::Blob, content).hash();
 
         let entry = IndexEntry::with_file_metadata(mode, hash, file_name, &metadata)?;
 

@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
-use crate::object::ObjectType;
-use crate::object::{hash::Hash, GitObject};
+use crate::entity::object::ObjectType;
+use crate::entity::object::{hash::Hash, GitObject};
 use crate::parser::CatFileArgs;
 use anyhow::{bail, Result};
 

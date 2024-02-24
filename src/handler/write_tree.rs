@@ -1,4 +1,7 @@
-use crate::{index::Index, parser::WriteTreeArgs, tree::TreeNode};
+use crate::{
+    entity::{index::Index, tree::TreeNode},
+    parser::WriteTreeArgs,
+};
 use anyhow::Result;
 
 pub fn handle(args: &WriteTreeArgs) -> Result<()> {

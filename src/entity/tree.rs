@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use crate::index::Index;
-use crate::object::hash::Hash;
-use crate::object::mode::{BlobType, Mode};
-use crate::object::{GitObject, TreeEntry};
+use crate::entity::index::Index;
+use crate::entity::object::hash::Hash;
+use crate::entity::object::mode::{BlobType, Mode};
+use crate::entity::object::{GitObject, TreeEntry};
 use anyhow::{bail, Result};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
