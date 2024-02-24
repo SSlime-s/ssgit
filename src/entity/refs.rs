@@ -14,7 +14,7 @@ impl Ref {
         PathBuf::from(name)
     }
 
-    fn to_path(&self) -> PathBuf {
+    pub fn to_path(&self) -> PathBuf {
         let mut ret = PathBuf::from(REFS_DIRECTORY);
 
         match self {
@@ -31,7 +31,7 @@ impl Ref {
         ret
     }
 
-    fn read_hash(&self) -> Result<Option<String>> {
+    pub fn read_hash(&self) -> Result<Option<String>> {
         let path = self.to_path();
 
         if !path.exists() {
