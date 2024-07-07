@@ -1,6 +1,7 @@
 use crate::parser::{Cli, Commands};
 use anyhow::{bail, Result};
 
+mod add;
 mod cat_file;
 mod commit_tree;
 mod hash_object;
@@ -24,5 +25,6 @@ pub fn handle(cli: &Cli) -> Result<()> {
         Commands::CommitTree(args) => commit_tree::handle(args),
         Commands::UpdateRef(args) => update_ref::handle(args),
         Commands::Init(args) => init::handle(args),
+        Commands::Add(args) => add::handle(args),
     }
 }
