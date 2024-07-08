@@ -8,6 +8,7 @@ mod commit_tree;
 mod hash_object;
 mod init;
 mod ls_files;
+mod switch;
 mod update_index;
 mod update_ref;
 mod write_tree;
@@ -28,5 +29,6 @@ pub fn handle(cli: &Cli) -> Result<()> {
         Commands::Init(args) => init::handle(args),
         Commands::Add(args) => add::handle(args),
         Commands::Commit(args) => commit::handle(args),
+        Commands::Switch(args) => switch::handle(args),
     }
 }

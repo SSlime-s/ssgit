@@ -19,6 +19,7 @@ pub enum Commands {
     Init(InitArgs),
     Add(AddArgs),
     Commit(CommitArgs),
+    Switch(SwitchArgs),
 }
 
 #[derive(Args, Debug)]
@@ -121,6 +122,28 @@ pub struct CommitArgs {
 
     #[arg(long)]
     pub allow_empty_message: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct SwitchArgs {
+    #[command(flatten)]
+    pub options: SwitchArgsOptions,
+}
+
+#[derive(Args, Debug)]
+#[group(required = true, multiple = false)]
+pub struct SwitchArgsOptions {
+    #[arg(value_name = "branch")]
+    pub switch: Option<String>,
+
+    #[arg(short, value_name = "branch")]
+    pub create: Option<String>,
+
+    #[arg(long, value_name = "hash")]
+    pub detach: Option<String>,
+
+    #[arg(long, value_name = "branch")]
+    pub orphan: Option<String>,
 }
 
 pub fn parse() -> Cli {
