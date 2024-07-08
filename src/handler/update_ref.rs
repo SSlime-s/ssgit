@@ -38,28 +38,12 @@ pub fn handle(args: &UpdateRefArgs) -> Result<()> {
                     new_head.write()?;
                 }
                 Head::Ref(ref_) => {
-                    let path = ref_.to_path();
-                    if path.is_dir() {
-                        bail!("Ref is a directory: {}", ref_.to_string());
-                    }
-                    if !path.exists() {
-                        std::fs::create_dir_all(path.parent().unwrap())?;
-                    }
-
-                    std::fs::write(path, new_hash.to_string())?;
+                    ref_.write_hash(&new_hash.to_string())?;
                 }
             }
         }
         RefType::Ref(ref_) => {
-            let path = ref_.to_path();
-            if path.is_dir() {
-                bail!("Ref is a directory: {}", ref_.to_string());
-            }
-            if !path.exists() {
-                std::fs::create_dir_all(path.parent().unwrap())?;
-            }
-
-            std::fs::write(path, new_hash.to_string())?;
+            ref_.write_hash(&new_hash.to_string())?;
         }
     };
 

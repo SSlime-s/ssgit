@@ -31,6 +31,20 @@ impl Ref {
         ret
     }
 
+    pub fn write_hash(&self, hash: &str) -> Result<()> {
+        let path = self.to_path();
+        if path.is_dir() {
+            bail!("Ref is a directory: {}", self.to_string());
+        }
+        if !path.exists() {
+            std::fs::create_dir_all(path.parent().unwrap())?;
+        }
+
+        std::fs::write(path, hash)?;
+
+        Ok(())
+    }
+
     pub fn read_hash(&self) -> Result<Option<String>> {
         let path = self.to_path();
 
