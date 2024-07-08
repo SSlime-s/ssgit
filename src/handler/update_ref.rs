@@ -5,7 +5,7 @@ use crate::{
     parser::UpdateRefArgs,
 };
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 
 #[derive(Debug, Clone)]
 enum RefType {

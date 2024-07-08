@@ -1,7 +1,7 @@
 mod consts;
+mod entity;
 mod handler;
 mod parser;
-mod entity;
 
 use anyhow::Result;
 
