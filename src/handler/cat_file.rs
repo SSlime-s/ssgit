@@ -37,7 +37,7 @@ pub fn handle(args: &CatFileArgs) -> Result<()> {
             }
         },
         (_, true, _) => {
-            println!("{}", objects.type_.to_string());
+            println!("{}", objects.type_);
         }
         (_, _, true) => {
             println!("{}", objects.size());

@@ -40,11 +40,11 @@ impl FromStr for Head {
         }
     }
 }
-impl ToString for Head {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for Head {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Head::Detached(hash) => hash.to_string(),
-            Head::Ref(r) => format!("ref: {}", r.to_string()),
+            Head::Detached(hash) => write!(f, "{}", hash),
+            Head::Ref(r) => write!(f, "ref: {}", r),
         }
     }
 }

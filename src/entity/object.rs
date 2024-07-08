@@ -80,14 +80,15 @@ impl FromStr for ObjectType {
         }
     }
 }
-impl ToString for ObjectType {
-    fn to_string(&self) -> String {
-        match self {
+impl std::fmt::Display for ObjectType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
             Self::Blob => "blob",
             Self::Tree => "tree",
             Self::Commit => "commit",
-        }
-        .to_string()
+        };
+
+        f.write_str(s)
     }
 }
 
@@ -262,7 +263,7 @@ impl TryFrom<&[u8]> for GitObject {
 }
 impl From<&GitObject> for Vec<u8> {
     fn from(object: &GitObject) -> Self {
-        let header = format!("{} {}\0", object.type_.to_string(), object.size());
+        let header = format!("{} {}\0", object.type_, object.size());
         let mut bytes = header.as_bytes().to_vec();
         bytes.extend(object.body.clone());
         bytes

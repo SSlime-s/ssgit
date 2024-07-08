@@ -69,11 +69,11 @@ impl FromStr for Ref {
         }
     }
 }
-impl ToString for Ref {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for Ref {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Ref::Branch(name) => format!("refs/heads/{}", name),
-            Ref::Tag(name) => format!("refs/tags/{}", name),
+            Ref::Branch(name) => write!(f, "refs/heads/{}", name),
+            Ref::Tag(name) => write!(f, "refs/tags/{}", name),
         }
     }
 }
