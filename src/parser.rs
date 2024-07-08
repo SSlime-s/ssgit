@@ -20,6 +20,7 @@ pub enum Commands {
     Add(AddArgs),
     Commit(CommitArgs),
     Switch(SwitchArgs),
+    Branch(BranchArgs),
 }
 
 #[derive(Args, Debug)]
@@ -144,6 +145,22 @@ pub struct SwitchArgsOptions {
 
     #[arg(long, value_name = "branch")]
     pub orphan: Option<String>,
+}
+
+#[derive(Args, Debug)]
+pub struct BranchArgs {
+    #[command(flatten)]
+    pub options: BranchArgsOptions,
+}
+
+#[derive(Args, Debug)]
+#[group(required = false, multiple = false)]
+pub struct BranchArgsOptions {
+    #[arg(short, long)]
+    pub create: Option<String>,
+
+    #[arg(short, long)]
+    pub delete: Option<String>,
 }
 
 pub fn parse() -> Cli {

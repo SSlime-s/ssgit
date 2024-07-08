@@ -2,6 +2,7 @@ use crate::parser::{Cli, Commands};
 use anyhow::{bail, Result};
 
 mod add;
+mod branch;
 mod cat_file;
 mod commit;
 mod commit_tree;
@@ -30,5 +31,6 @@ pub fn handle(cli: &Cli) -> Result<()> {
         Commands::Add(args) => add::handle(args),
         Commands::Commit(args) => commit::handle(args),
         Commands::Switch(args) => switch::handle(args),
+        Commands::Branch(args) => branch::handle(args),
     }
 }

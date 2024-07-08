@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 
 use crate::consts::REFS_DIRECTORY;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Ref {
     Branch(String),
     Tag(String),
@@ -12,6 +12,24 @@ pub enum Ref {
 impl Ref {
     fn name_to_path(name: &str) -> PathBuf {
         PathBuf::from(name)
+    }
+
+    pub fn branch_names() -> Result<Vec<String>> {
+        let mut ret = Vec::new();
+
+        let path = PathBuf::from(REFS_DIRECTORY).join("heads");
+        if !path.exists() {
+            return Ok(ret);
+        }
+
+        for entry in std::fs::read_dir(path)? {
+            let entry = entry?;
+            let path = entry.path();
+            let name = path.file_name().unwrap().to_str().unwrap().to_string();
+            ret.push(name);
+        }
+
+        Ok(ret)
     }
 
     pub fn to_path(&self) -> PathBuf {
