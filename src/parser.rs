@@ -117,7 +117,10 @@ pub struct AddArgs {
 #[derive(Args, Debug)]
 pub struct CommitArgs {
     #[arg(short)]
-    pub message: String,
+    pub message: Vec<String>,
+
+    #[arg(long)]
+    pub allow_empty_message: bool,
 }
 
 pub fn parse() -> Cli {

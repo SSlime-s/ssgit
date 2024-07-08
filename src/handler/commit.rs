@@ -10,10 +10,22 @@ use crate::{
     },
     parser::CommitArgs,
 };
-use anyhow::Result;
+use anyhow::{bail, Result};
 
 pub fn handle(args: &CommitArgs) -> Result<()> {
     dbg!(args);
+
+    let message = if args.message.is_empty() {
+        std::io::stdin()
+            .lines()
+            .map(|line| line.map_err(|e| e.into()))
+            .collect::<Result<String>>()?
+    } else {
+        args.message.join("\n\n")
+    };
+    if message.is_empty() && !args.allow_empty_message {
+        bail!("Aborting commit due to empty commit message.");
+    }
 
     let index = Index::read()?;
     let node = TreeNode::from(index.unwrap());
@@ -48,7 +60,7 @@ pub fn handle(args: &CommitArgs) -> Result<()> {
         author: committer.clone(),
         committer,
         rest_of_header: "".to_string(),
-        message: args.message.clone(),
+        message,
     };
 
     let git_object = GitObject::from_commit(&commit);
